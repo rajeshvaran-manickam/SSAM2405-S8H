@@ -27,7 +27,7 @@ export default function RejectReasonText(context) {
         });
     }
     if (PersonaLib.isFieldServiceTechnician(context)) {
-        let page = pageProxy._page._definition.getName();
+        let page = pageProxy?._page?._definition?.getName?.() ?? pageProxy?._page?._definition?.name;
         if (NoteLib.didSetNoteTypeTransactionFlagForPage(pageProxy, page)) {
             return NoteViewValue(pageProxy);
         }

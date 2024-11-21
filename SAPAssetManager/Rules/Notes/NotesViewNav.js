@@ -4,8 +4,7 @@ import libCom from '../Common/Library/CommonLibrary';
 export default function NotesViewNav(clientAPI) {
     
     // Set the transaction type before navigating to the Note View page
-    let page = clientAPI.getPageProxy()._page._definition.getName();
-
+    let page = clientAPI.getPageProxy?.()._page?._definition?.getName?.() ?? clientAPI.getPageProxy?.()._page?._definition?.name;
     if (page === 'WCMNotesListPage') {
         page = libCom.getPageName(clientAPI.evaluateTargetPathForAPI('#Page:-Previous'));
     }

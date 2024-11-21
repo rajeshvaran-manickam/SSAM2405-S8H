@@ -22,5 +22,5 @@
     "OnSuspend": "/SAPAssetManager/Rules/ApplicationEvents/ResetPeriodicAutoSync.js",
     "OnExit": "/SAPAssetManager/Rules/ApplicationEvents/ExitEventHandler.js",
     "OnLinkDataReceived": "/SAPAssetManager/Rules/DeepLinks/LinkDataReceived.js",
-    "_SchemaVersion": "23.4"
+    "_SchemaVersion": "24.7"
 }

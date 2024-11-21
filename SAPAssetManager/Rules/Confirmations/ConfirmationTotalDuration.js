@@ -128,7 +128,7 @@ function calculateDuration(confirmations) {
 }
 
 function getPageName(context) {
-    return context.getPageProxy()._page._definition.getName();
+    return context?.getPageProxy?.()?._page?._definition?.getName?.() ?? context?.getPageProxy?.()?._page?._definition?.name ?? context?._page?._definition?.getName?.();
 }
 
 function getAssociatedDate(context) {

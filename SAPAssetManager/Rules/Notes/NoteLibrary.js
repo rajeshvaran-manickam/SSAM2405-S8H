@@ -197,7 +197,7 @@ export class NoteLibrary {
 
 
     static didSetNoteTypeTransactionForBindingType(clientAPI, customBinding = undefined) {
-        let page = clientAPI.getPageProxy()._page._definition.getName();
+        let page = clientAPI.getPageProxy?.()._page?._definition?.getName?.() ?? clientAPI.getPageProxy?.()._page?._definition?.name;
         if (page === 'MeasuringPointDetailsPage') {
             clientAPI._context.binding = clientAPI.getPageProxy().binding.WorkOrderTool[0];
         }

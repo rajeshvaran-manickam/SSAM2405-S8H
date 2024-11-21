@@ -22,11 +22,7 @@ export default class {
      * Get Page Name from context
      */
     static getPageName(context) {
-        if (context.getPageProxy) {
-            return context.getPageProxy()._page._definition.getName();
-        } else {
-            return context._page._definition.getName();
-        }
+        return context?.getPageProxy?.()?._page?._definition?.getName?.() ?? context?.getPageProxy?.()?._page?._definition?.name ?? context?._page?._definition?.getName?.()
     }
 
     /**
@@ -35,15 +31,11 @@ export default class {
     static getCurrentPageName(context) {
         try {
             if (context.getPageProxy && !context._control) {
-                if (context.getPageProxy()?.currentPage?._definition) {
-                    return context.getPageProxy().currentPage._definition.getName();
-                } else if (context.getPageProxy()?._page?._definition) {
-                    return context.getPageProxy()._page._definition.getName();
-                }
+                return context?.getPageProxy?.()?.currentPage?._definition?.getName?.() ?? context?.getPageProxy?.()?._page?._definition?.getName?.()
+                    ?? context?.getPageProxy?.()?.currentPage?._definition?.name ?? context?.getPageProxy?.()?._page?._definition?.name;
             } else {
-                return context.currentPage._definition.getName();
+                return context.currentPage?._definition?.getName?.();
             }
-            return '';
         } catch (err) {
             Logger.error(context.getGlobalDefinition('/SAPAssetManager/Globals/Logs/CategoryCommon.global').getValue(), `CommonLibrary.getCurrentPageName error: ${err}`);
             return '';
@@ -54,11 +46,9 @@ export default class {
      * Get Previous Page Name from context
      */
     static getPreviousPageName(context) {
-        if (context.getPageProxy) {
-            return context.getPageProxy().evaluateTargetPathForAPI('#Page:-Previous')._page._definition.getName();
-        } else {
-            return context.evaluateTargetPathForAPI('#Page:-Previous').exc_page._definition.getName();
-        }
+        return context.getPageProxy?.().evaluateTargetPathForAPI('#Page:-Previous')?._page?._definition?.getName?.() 
+            ?? context.getPageProxy?.().evaluateTargetPathForAPI('#Page:-Previous')?._page?._definition?.name 
+            ?? context.evaluateTargetPathForAPI('#Page:-Previous').exc_page?._definition?.getName?.();
     }
 
     /**
