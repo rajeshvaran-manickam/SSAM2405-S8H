@@ -84,9 +84,9 @@ export default class {
                         // eslint-disable-next-line brace-style
                         'NotificationType': (function() { try { return context.getPageProxy().evaluateTargetPath('#Control:TypeLstPkr/#SelectedValue'); } catch (e) { return ''; } })(),
                         // eslint-disable-next-line brace-style
-                        'HeaderEquipment': (function() { try { return context.getPageProxy().evaluateTargetPath('#Control:EquipHierarchyExtensionControl/#SelectedValue'); } catch (e) { return ''; } })(),
+                        'HeaderEquipment': (function() { try { return context.getPageProxy().getControl('FormCellContainer').getControl('EquipHierarchyExtensionControl').getValue(); } catch (e) { return ''; } })(),
                         // eslint-disable-next-line brace-style
-                        'HeaderFunctionLocation': (function() { try { return context.getPageProxy().evaluateTargetPath('#Control:FuncLocHierarchyExtensionControl/#SelectedValue'); } catch (e) { return ''; } })(),
+                        'HeaderFunctionLocation': (function() { try { return context.getPageProxy().getControl('FormCellContainer').getControl('FuncLocHierarchyExtensionControl').getValue(); } catch (e) { return ''; } })(),
                         // eslint-disable-next-line brace-style
                         'ExternalWorkCenterId': (function() { try { return context.getPageProxy().evaluateTargetPath('#Control:MainWorkCenterListPicker/#SelectedValue'); } catch (e) { return ''; } })(),
                     };
@@ -140,9 +140,9 @@ export default class {
                     // eslint-disable-next-line brace-style
                     'NotificationType': (function() { try { return context.getPageProxy().evaluateTargetPath('#Control:TypeLstPkr/#SelectedValue'); } catch (e) { return ''; } })(),
                     // eslint-disable-next-line brace-style
-                    'HeaderEquipment': (function() { try { return context.getPageProxy().evaluateTargetPath('#Control:EquipHierarchyExtensionControl/#SelectedValue'); } catch (e) { return ''; } })(),
+                    'HeaderEquipment': (function() { try { return context.getPageProxy().getControl('FormCellContainer').getControl('EquipHierarchyExtensionControl').getValue(); } catch (e) { return ''; } })(),
                     // eslint-disable-next-line brace-style
-                    'HeaderFunctionLocation': (function() { try { return context.getPageProxy().evaluateTargetPath('#Control:FuncLocHierarchyExtensionControl/#SelectedValue'); } catch (e) { return ''; } })(),
+                    'HeaderFunctionLocation': (function() { try { return context.getPageProxy().getControl('FormCellContainer').getControl('FuncLocHierarchyExtensionControl').getValue(); } catch (e) { return ''; } })(),
                     // eslint-disable-next-line brace-style
                     'ExternalWorkCenterId': (function() { try { return context.getPageProxy().evaluateTargetPath('#Control:MainWorkCenterListPicker/#SelectedValue'); } catch (e) { return ''; } })(),
                 };
@@ -195,9 +195,9 @@ export default class {
                     // eslint-disable-next-line brace-style
                     'NotificationType': (function() { try { return context.getPageProxy().evaluateTargetPath('#Control:TypeLstPkr/#SelectedValue'); } catch (e) { return ''; } })(),
                     // eslint-disable-next-line brace-style
-                    'HeaderEquipment': (function() { try { return context.getPageProxy().evaluateTargetPath('#Control:EquipHierarchyExtensionControl/#SelectedValue'); } catch (e) { return ''; } })(),
+                    'HeaderEquipment': (function() { try { return context.getPageProxy().getControl('FormCellContainer').getControl('EquipHierarchyExtensionControl').getValue(); } catch (e) { return ''; } })(),
                     // eslint-disable-next-line brace-style
-                    'HeaderFunctionLocation': (function() { try { return context.getPageProxy().evaluateTargetPath('#Control:FuncLocHierarchyExtensionControl/#SelectedValue'); } catch (e) { return ''; } })(),
+                    'HeaderFunctionLocation': (function() { try { return context.getPageProxy().getControl('FormCellContainer').getControl('FuncLocHierarchyExtensionControl').getValue(); } catch (e) { return ''; } })(),
                     // eslint-disable-next-line brace-style
                     'ExternalWorkCenterId': (function() { try { return context.getPageProxy().evaluateTargetPath('#Control:MainWorkCenterListPicker/#SelectedValue'); } catch (e) { return ''; } })(),
                 };
@@ -341,27 +341,13 @@ export default class {
 
     static CatalogCodeQuery(context, notification, type) {
 
-        // Assume we do not have a valid readLink (We're on a changeset)
-        let equipEntitySet = 'MyEquipments';
-        let flocEntitySet = 'MyFunctionalLocations';
+        // We are not assigning EntitySet for Equipment and Functional Location to save the performance of this function. 
+        //If the functional location or equipment is not selected, then we are returning the promise to avoid unnecessary reading
+        let equipEntitySet = '';
+        let flocEntitySet = '';
+        let equipQuery, flocQuery = '';
         let workcenterEntitySet = 'WorkCenters';
-        let equipQuery = '$filter=length(CatalogProfile) gt 0';
-        let flocQuery = '$filter=length(CatalogProfile) gt 0';
         let workCenterQuery = '$filter=length(CatalogProfile) gt 0';
-
-        if (notification.HeaderEquipment) {
-            equipQuery = "$filter=EquipId eq '" + notification.HeaderEquipment + "' and length(CatalogProfile) gt 0";
-        }
-
-        if (notification.HeaderFunctionLocation) {
-            flocQuery = "$filter=FuncLocIdIntern eq '" + notification.HeaderFunctionLocation + "' and length(CatalogProfile) gt 0";
-        }
-
-        if (notification.MainWorkCenter) {
-            workCenterQuery = "$filter=WorkCenterId eq '" + notification.MainWorkCenter + "' and length(CatalogProfile) gt 0";
-        } else if (notification.ExternalWorkCenterId) {
-            workCenterQuery = "$filter=ExternalWorkCenterId eq '" + notification.ExternalWorkCenterId + "' and length(CatalogProfile) gt 0";
-        }
 
         // If we are not on a changeset (and do have a valid readLink)
         if (notification['@odata.readLink'] && notification['@odata.readLink'] !== 'pending_1') {
@@ -370,6 +356,22 @@ export default class {
 
             equipQuery = '';
             flocQuery = '';
+        }
+
+        if (notification.HeaderEquipment) {
+            equipEntitySet = 'MyEquipments';
+            equipQuery = "$filter=EquipId eq '" + notification.HeaderEquipment + "' and length(CatalogProfile) gt 0";
+        }
+
+        if (notification.HeaderFunctionLocation) {
+            flocEntitySet = 'MyFunctionalLocations';
+            flocQuery = "$filter=FuncLocIdIntern eq '" + notification.HeaderFunctionLocation + "' and length(CatalogProfile) gt 0";
+        }
+
+        if (notification.MainWorkCenter) {
+            workCenterQuery = "$filter=WorkCenterId eq '" + notification.MainWorkCenter + "' and length(CatalogProfile) gt 0";
+        } else if (notification.ExternalWorkCenterId) {
+            workCenterQuery = "$filter=ExternalWorkCenterId eq '" + notification.ExternalWorkCenterId + "' and length(CatalogProfile) gt 0";
         }
 
         // Handle optional order overrides
@@ -381,9 +383,17 @@ export default class {
         let reads = [];
 
         // Equipment Read
+        if (!ValidationLibrary.evalIsEmpty(equipEntitySet) || !ValidationLibrary.evalIsEmpty(equipQuery)) {
         reads.push(context.read('/SAPAssetManager/Services/AssetManager.service', equipEntitySet, [], equipQuery));
+        } else {
+            reads.push(Promise.resolve([]));
+        }
         // Functional Location Read
+        if (!ValidationLibrary.evalIsEmpty(flocEntitySet) || !ValidationLibrary.evalIsEmpty(flocQuery)) {
         reads.push(context.read('/SAPAssetManager/Services/AssetManager.service', flocEntitySet, [], flocQuery));
+        } else {
+            reads.push(Promise.resolve([]));
+        } 
         // WorkCenter Read
         reads.push(workCenterQuery ? context.read('/SAPAssetManager/Services/AssetManager.service', workcenterEntitySet, [], workCenterQuery) : Promise.resolve([]));
         // Notification Type Read
@@ -392,7 +402,7 @@ export default class {
         return Promise.all(reads).then(function(readResults) {
 
             // Handle optional Catalog Type overrides and populate defaults
-            let catalogs = { 'CatTypeActivities': '', 'CatTypeObjectParts': '', 'CatTypeDefects': '', 'CatTypeTasks': '', 'CatTypeCauses': '' };
+            let catalogs = { 'CatTypeActivities': '', 'CatTypeObjectParts': '', 'CatTypeDefects': '', 'CatTypeTasks': '', 'CatTypeCauses': '', 'CatTypeCoding': '' };
             for (let catType in catalogs) {
                 if (readResults[3].getItem(0) && readResults[3].getItem(0)[catType]) {
                     catalogs[catType] = readResults[3].getItem(0)[catType];
@@ -437,8 +447,12 @@ export default class {
                 clientData[stateVarName] = false;
                 return { 'Catalog': catalogs[type], 'CatalogProfile': readResults[3].getItem(0) && readResults[3].getItem(0).CatalogProfile };
             });
+        }).catch(error => {
+            Logger.error('CatalogCodeQuery', error);
+            return {};
         });
     }
+
     /**
      * Used for setting the List Target QueryOptions for Notification Task/Activity Group
      * USAGE: Target QueryOptions
@@ -446,8 +460,10 @@ export default class {
      */
     static NotificationTaskActivityGroupQuery(context, type) {
         let binding = context.getPageProxy().binding;
-        if (binding && binding['@odata.type'] === '#sap_mobile.MyNotificationHeader') {
+        if (binding && (binding['@odata.type'] === '#sap_mobile.MyNotificationHeader' || binding['@odata.type'] === '#sap_mobile.InspectionCharacteristic')) {
             // Simple case: we're on a Notification already
+            binding.HeaderFunctionLocation = context.getPageProxy().getControl('FormCellContainer')?.getControl('FuncLocHierarchyExtensionControl')?.getValue() || binding.HeaderFunctionLocation;
+            binding.HeaderEquipment =  context.getPageProxy().getControl('FormCellContainer')?.getControl('EquipHierarchyExtensionControl')?.getValue() || binding.HeaderEquipment;
             return this.GroupQuery(context, binding, type);
         } else {
             // Alternate case: we're on an Item, Task, or Activity
@@ -500,7 +516,6 @@ export default class {
                 return '';
             }
         } catch (exception) {
-            libCom.setEditable(context, false);
             return '';
         }
     }
@@ -532,9 +547,9 @@ export default class {
                     // eslint-disable-next-line brace-style
                     'NotificationType': (function() { try { return context.evaluateTargetPath('#Control:TypeLstPkr/#SelectedValue'); } catch (e) { return notificationItem.NotificationType || ''; } })(),
                     // eslint-disable-next-line brace-style
-                    'HeaderEquipment': (function() { try { return context.evaluateTargetPath('#Control:EquipHierarchyExtensionControl/#SelectedValue'); } catch (e) { return ''; } })(),
+                    'HeaderEquipment': (function() { try { return context.getPageProxy().getControl('FormCellContainer').getControl('EquipHierarchyExtensionControl').getValue(); } catch (e) { return ''; } })(),
                     // eslint-disable-next-line brace-style
-                    'HeaderFunctionLocation': (function() { try { return context.evaluateTargetPath('#Control:FuncLocHierarchyExtensionControl/#SelectedValue'); } catch (e) { return ''; } })(),
+                    'HeaderFunctionLocation': (function() { try { return context.getPageProxy().getControl('FormCellContainer').getControl('FuncLocHierarchyExtensionControl').getValue(); } catch (e) { return ''; } })(),
                     // eslint-disable-next-line brace-style
                     'ExternalWorkCenterId': (function() { try { return context.getPageProxy().evaluateTargetPath('#Control:MainWorkCenterListPicker/#SelectedValue'); } catch (e) { return ''; } })(),
                 };
@@ -857,7 +872,7 @@ export default class {
         return Promise.allSettled(valPromises).then(results => {
             const pass = results.every(r => r.status === 'fulfilled');
             if (!pass) {
-                throw false;
+                throw new Error();
             }
             return true;
         }).catch(() => {
@@ -883,7 +898,7 @@ export default class {
                 return total && value;
             });
             if (!pass) {
-                throw false;
+                throw new Error();
             }
             return true;
         }).catch(() => {
