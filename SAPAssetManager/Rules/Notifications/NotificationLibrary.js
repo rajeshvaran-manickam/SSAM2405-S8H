@@ -503,8 +503,6 @@ export default class {
 
             if (notif && (notif['@odata.type'] === '#sap_mobile.MyNotificationItem' || notif['@odata.type'] === '#sap_mobile.MyNotificationActivity' || notif['@odata.type'] === '#sap_mobile.MyNotificationTask')) {
                 notif = notif.Notification;
-            } else if (notif && notif['@odata.type'] === '#sap_mobile.MyWorkOrderHeader') {
-                notif = libCom.getStateVariable(context, 'CreateNotification');
             } else if (notif && notif['@odata.type'] === '#sap_mobile.MyNotificationItemCause' || notif['@odata.type'] === '#sap_mobile.MyNotificationItemTask' || notif['@odata.type'] === '#sap_mobile.MyNotificationItemActivity') {
                 notif = notif.Item.Notification;
             }
