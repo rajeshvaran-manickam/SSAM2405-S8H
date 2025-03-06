@@ -125,7 +125,7 @@ export function GetEDTControls(context) {
     let sections = context.getPageProxy().getControls()[0].getSections();
     let controlsArray = [];
     for (let index = 2; index < sections.length; index += 2) {
-        controlsArray.push(sections[index].getExtensions()[0]);
+        controlsArray.push(sections[index].getExtension());
     }
     return controlsArray;
 }

@@ -226,7 +226,7 @@ export function handleDigitalSignatureRegistration(context) {
 function checkIsDemo(pageProxy, overviewPage) {
     if (!pageProxy.isDemoMode()) {
         const mapSection = overviewPage.getControls()[0].getSection('MapExtensionSection');
-        const mapExtension = mapSection ? mapSection.getExtensions()[0] : null;
+        const mapExtension = mapSection ? mapSection.getExtension() : null;
         if (mapExtension && !mapExtension.isInitialized()) {
             mapExtension.fetchConfig();
         }

@@ -317,8 +317,8 @@ export function updateSectionStatusText(context, edtSectionIndex, updatedStatus)
     let headerSectionIndex = (edtSectionIndex * 2) + 1;
     let headerSection = sections[headerSectionIndex];
 
-    if (headerSection && headerSection.getExtensions().length) {
-        headerSection.getExtensions()[0].setStatusText(updatedStatus);
+    if (headerSection && headerSection.getExtension()) {
+        headerSection.getExtension().setStatusText(updatedStatus);
     }
 }
 

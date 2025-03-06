@@ -9,7 +9,7 @@ export default function OverviewOnPageReturning(context) {
         let mapSection = sectionedTable.getSection('MapExtensionSection');
 
         if (mapSection) {
-            let mapViewExtension = mapSection.getExtensions()[0];
+            let mapViewExtension = mapSection.getExtension();
             if (IsAndroid(context)) {
                 mapSection.redraw(true);
             } else {
