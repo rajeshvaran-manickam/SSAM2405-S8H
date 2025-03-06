@@ -39,8 +39,8 @@ export default async function InspectionCharacteristicsEDTFilter(context) {
 
 // checks if every section is already set and has access to its extensions and for EDT to its row bindings
 function isRedrawFinished(sections) {
-    return sections.every(sec => sec.getExtensions()[0] &&
-        sec.getExtensions()[0].getRowBindings ?
-        sec.getExtensions()[0].getRowBindings()[0] :
+    return sections.every(sec => sec.getExtension() &&
+        sec.getExtension().getRowBindings ?
+        sec.getExtension().getRowBindings()[0] :
         true);
 }

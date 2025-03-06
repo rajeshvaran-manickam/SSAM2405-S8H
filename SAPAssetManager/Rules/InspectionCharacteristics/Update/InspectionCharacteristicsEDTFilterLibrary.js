@@ -9,8 +9,8 @@ export default class {
         let count = 0;
         for (let section of sections) {
             await section.setVisible(true);
-            if (section.getExtensions() && section.getExtensions()[0] && section.getExtensions()[0].constructor && section.getExtensions()[0].constructor.name === 'EditableDataTableViewExtension') {
-                let extension = section.getExtensions()[0];
+            if (section.getExtension() && section.getExtension().constructor && section.getExtension().constructor.name === 'EditableDataTableViewExtension') {
+                let extension = section.getExtension();
                 if (extension) {
                     count = count + extension.getRowBindings().length;
                     await extension.resetFilter();
@@ -31,8 +31,8 @@ export default class {
         let count = 0;
         let filteredCount = 0;
         for (let index = 0; index < sections.length; index++) {
-            //if (sections[index].getExtensions() && sections[index].getExtensions().length > 0 && sections[index].getExtensions()[0].constructor && sections[index].getExtensions()[0].constructor.name === 'EditableDataTableViewExtension') {
-            if (sections[index]._context.element.definition._data.Class === 'EditableDataTableViewExtension' && sections[index].getExtensions() && sections[index].getExtensions().length > 0) {
+            //if (sections[index].getExtensions() && sections[index].getExtensions().length > 0 && sections[index].getExtension().constructor && sections[index].getExtension().constructor.name === 'EditableDataTableViewExtension') {
+            if (sections[index]._context.element.definition._data.Class === 'EditableDataTableViewExtension' && sections[index].getExtension()) {
                 this.filterSection(context, sections[index-1], sections[index], filter, count, filteredCount, false);
             }
         }
@@ -56,7 +56,7 @@ export default class {
             count = count + filterResults.Count;
             if (filteredRows && filteredRows.length > 0) {
                 filteredCount = filteredCount + filteredRows.length;
-                section.getExtensions()[0].applyFilter(filteredRows);
+                section.getExtension().applyFilter(filteredRows);
             } 
         }
         if (section.getVisible() !== filterResults.Visbility) {
@@ -173,7 +173,7 @@ export default class {
             // Create an object of key-value pairs, e.g. "(__Status: eq 'Error')" ==> {'Status' : 'Error'}
             /// Object.fromEntries() does not work in Chakra Javascript engine for Windows. Windows MDK recommended Array.from() instead 
             let obj = Array.from([expr.match(/(\w+) eq '([\d\w-]+)'/).slice(1, 3)]).reduce((acc, [ key, val ]) => Object.assign(acc, { [key]: val }), {});
-            let extension = section.getExtensions()[0];
+            let extension = section.getExtension();
             if (extension) {
                     let firstRow = extension.getRowBindings()[0];
                     let rows = extension.getAllValues();
@@ -273,8 +273,8 @@ export default class {
     static checkAnyDataChangedInEDT(context) {
         let sections = context.getPageProxy().getControls()[0].getSections();
         for (let index = 0; index < sections.length; index++) {
-            if (sections[index]._context.element.definition._data.Class === 'EditableDataTableViewExtension' && sections[index].getExtensions() && sections[index].getExtensions().length > 0) {
-                if (sections[index].getExtensions()[0].getUpdatedValues().length > 0) {
+            if (sections[index]._context.element.definition._data.Class === 'EditableDataTableViewExtension' && sections[index].getExtension()) {
+                if (sections[index].getExtension().getUpdatedValues().length > 0) {
                     return true;
                 }
             }

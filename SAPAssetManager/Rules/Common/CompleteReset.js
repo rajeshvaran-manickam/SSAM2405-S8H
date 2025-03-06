@@ -12,7 +12,7 @@ export default function CompleteReset(clientAPI, setInitialSync = true) {
     // Clear cache settings in map before reset
     const mapControl = getMapControlInOverViewPage(clientAPI);
     if (libCom.isDefined(mapControl)) {
-        const mapExtension = mapControl.getExtensions()[0];
+        const mapExtension = mapControl.getExtension();
         if (libCom.isDefined(mapExtension)) {
             mapExtension.clearUserDefaults();
         }

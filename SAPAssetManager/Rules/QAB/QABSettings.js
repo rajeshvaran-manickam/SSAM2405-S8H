@@ -221,7 +221,7 @@ export default class QABSettings extends QABSettingsHelpers {
             }
 
             try {
-                this._extension = extensionSection.getExtensions()[0];
+                this._extension = extensionSection.getExtension();
             } catch (error) {
                 Logger.error('QABSettings get extension error', error);
             }

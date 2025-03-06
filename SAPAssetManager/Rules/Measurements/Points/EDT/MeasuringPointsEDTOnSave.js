@@ -40,7 +40,7 @@ function validateEDTSections(context, ErrorsHandler) {
 }
 
 function validateEDTSection(context, section, sectionIndex, ErrorsHandler) {
-    let sectionExtension = section.getExtensions().length ? section.getExtensions()[0] : null;
+    let sectionExtension = section.getExtension();
     if (!sectionExtension) {
         return false;
     }

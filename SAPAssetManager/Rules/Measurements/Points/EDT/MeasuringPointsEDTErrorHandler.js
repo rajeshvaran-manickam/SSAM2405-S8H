@@ -40,7 +40,7 @@ export default class MeasuringPointsEDTErrorHandler {
             let section = sections[index];
 
             if (section._context.element.definition._data.Class === 'EditableDataTableViewExtension') {
-                let sectionExtension = section.getExtensions().length ? section.getExtensions()[0] : null;
+                let sectionExtension = section.getExtension();
 
                 if (sectionExtension) {
                     let cells = sectionExtension.getAllCells();
@@ -53,7 +53,7 @@ export default class MeasuringPointsEDTErrorHandler {
     }
 
     hideErrorForCell(section, rowIndex, controlName) {
-        let sectionExtension = section.getExtensions().length ? section.getExtensions()[0] : null;
+        let sectionExtension = section.getExtension();
      
         if (sectionExtension) {
             let cell = sectionExtension.getRowCellByName(rowIndex, controlName);
@@ -70,7 +70,7 @@ export default class MeasuringPointsEDTErrorHandler {
             let controlName = errorKey.split('-')[2];
             let sectionIndex = (edtSectionIndex + 1) * 2;
             let section = sections[sectionIndex];
-            let sectionExtension = section.getExtensions().length ? section.getExtensions()[0] : null;
+            let sectionExtension = section.getExtension();
             
             if (sectionExtension) {
                 let cell = sectionExtension.getRowCellByName(rowIndex, controlName);

@@ -21,7 +21,7 @@ function selectDeselectItemsHelper(context, sections, value, buttonText, labelTe
     LabelButtonLibrary.setButtonTitle(context, context.localizeText(buttonText));
     LabelButtonLibrary.setLabelText(context, labelText);
     for (let index = 2; index < sections.length; index += 2) {
-        let switchCell = sections[index].getExtensions()[0].getCell(0, 0);
+        let switchCell = sections[index].getExtension().getCell(0, 0);
         switchCell.setValue(value);
     }   
 }
