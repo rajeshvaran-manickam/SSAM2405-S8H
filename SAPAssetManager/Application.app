@@ -4,7 +4,7 @@
     "OnUserSwitch": "/SAPAssetManager/Rules/ApplicationEvents/ApplicationOnUserSwitch.js",
     "OnWillUpdate": "/SAPAssetManager/Rules/ApplicationEvents/ApplicationOnWillUpdate.js",
     "OnDidUpdate": "/SAPAssetManager/Rules/ApplicationEvents/ApplicationOnDidUpdate.js",
-    "Version": "2405.0.001",
+    "Version": "2405.0.002",
     "OnLaunch": [  
         "/SAPAssetManager/Rules/Common/SetAppLaunchStarted.js",
 	    "/SAPAssetManager/Rules/Log/InitializeLoggerAndNativeScriptObject.js",
