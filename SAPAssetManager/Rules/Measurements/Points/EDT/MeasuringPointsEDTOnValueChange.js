@@ -39,7 +39,6 @@ export async function cacheCellValue(pageAPI, cell, sectionIndex) {
             }
         }
 
-        cachedMeasurementDoc._updated = true; 
     }
 
     EDTHelper.updatedCachedRow(pageAPI, sectionIndex, cachedRowBinding);

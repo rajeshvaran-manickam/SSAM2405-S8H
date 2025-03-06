@@ -4,23 +4,65 @@ import MeasuringPointLibrary from '../../MeasuringPointLibrary';
 import MeasuringPointsEDTErrorHandler from './MeasuringPointsEDTErrorHandler';
 import EDTHelper from './MeasuringPointsEDTHelper';
 import MeasuringPointsEDTOnCommit from './MeasuringPointsEDTOnCommit';
+import ValidationLibrary from '../../../Common/Library/ValidationLibrary';
 
 export default function MeasuringPointsEDTOnSave(context) {
     let sections = context.getPageProxy().getControls()[0].getSections();
 
     let ErrorsHandler = new MeasuringPointsEDTErrorHandler();
     ErrorsHandler.hideErrors(sections);
-
+    CommonLibrary.setStateVariable(context, 'MissingCount', 0);
     validateEDTSections(context, ErrorsHandler);
 
     if (ErrorsHandler.hasErrors()) {
         ErrorsHandler.showErrors(sections);
-        return Promise.reject();
+        return validateOptionalFields(context).then(() => Promise.reject());
     } else {
-        return MeasuringPointsEDTOnCommit(context);
+        const count = CommonLibrary.getStateVariable(context, 'MissingCount');
+        
+        if (count > 0) {
+            const messageText = context.localizeText('validation_missed_readings_x', [count]);
+            const okButtonText = context.localizeText('continue_text');
+
+            return CommonLibrary.showWarningDialog(context, messageText, undefined, okButtonText).then(() => {
+                return validateOptionalFields(context).then(() => MeasuringPointsEDTOnCommit(context));
+            });
+        }
+        return validateOptionalFields(context).then(() => MeasuringPointsEDTOnCommit(context));
     }
 }
+function validateOptionalFields (context){
+    let warningResult = [];
+    let sections = context.getPageProxy().getControls()[0].getSections();
+    let edtSectionIndex = 0;
+ 
+    for (let section of sections) {
+        if (section._context.element.definition._data.Class === 'EditableDataTableViewExtension') {
+            let sectionExtension = section.getExtension();
+            if (!sectionExtension) {
+                continue;
+            }
+            sectionExtension.getRowBindings().forEach((rowBinding) => {
+                let cachedRowBinding = EDTHelper.getCachedRowBinding(context, edtSectionIndex, rowBinding);
+                let measurementDoc = EDTHelper.getLatestMeasurementDoc(context, cachedRowBinding);
 
+                const dict = {
+                    IsUpperRange: rowBinding.IsUpperRange,
+                    IsLowerRange: rowBinding.IsLowerRange,
+                    ReadingSim: measurementDoc.ReadingValue, 
+                    UpperRange: rowBinding.UpperRange,
+                    LowerRange: rowBinding.LowerRange, 
+                    Point: rowBinding.Point
+                };
+            
+                warningResult.push(MeasuringPointLibrary.validateReadingGreaterThanOrEqualLowerRange(context, dict));
+                warningResult.push(MeasuringPointLibrary.validateReadingLessThanOrEqualUpperRange(context, dict));
+            });
+            edtSectionIndex++;
+        }
+    }
+    return Promise.all(warningResult);
+}
 function validateEDTSections(context, ErrorsHandler) {
     let sections = context.getPageProxy().getControls()[0].getSections();
     let edtSectionIndex = 0;
@@ -44,6 +86,7 @@ function validateEDTSection(context, section, sectionIndex, ErrorsHandler) {
     if (!sectionExtension) {
         return false;
     }
+    const values = sectionExtension.getValues();
 
     sectionExtension.getRowBindings().forEach((rowBinding, rowIndex) => {
         ErrorsHandler.setRowIndex(rowIndex);
@@ -51,12 +94,15 @@ function validateEDTSection(context, section, sectionIndex, ErrorsHandler) {
         let isValid = true;
         let cachedRowBinding = EDTHelper.getCachedRowBinding(context, sectionIndex, rowBinding);
         let measurementDoc = EDTHelper.getLatestMeasurementDoc(context, cachedRowBinding);
+        let valuesForRow = values.find(value => value.RowIndex === rowIndex);
 
         if (!measurementDoc._skipped) {
-            isValid &= validateReadingValue(context, measurementDoc, rowBinding, ErrorsHandler);
-            isValid &= validateValuationCodeEntered(context, measurementDoc, rowBinding, ErrorsHandler);
-            isValid &= validateShortTextExceedsLength(context, measurementDoc, ErrorsHandler);
-
+            if (!shouldSkipEmptyReading(context, valuesForRow.Properties)) {
+            measurementDoc._updated = true; 
+                isValid &= validateReadingValue(context, measurementDoc, rowBinding, ErrorsHandler);
+                isValid &= validateValuationCodeEntered(context, measurementDoc, rowBinding, ErrorsHandler);
+                isValid &= validateShortTextExceedsLength(context, measurementDoc, ErrorsHandler);
+            }
             if (cachedRowBinding.PointType === 'L') {
                 isValid &= validateLAM(context, measurementDoc, ErrorsHandler);
             }
@@ -80,14 +126,22 @@ export function validateReadingValue(context, measurementDoc, rowBinding, Errors
         isValid &= validateContinuousCounter(context, measurementDoc, rowBinding, ErrorsHandler);
         isValid &= validateOverflowCounterIsNotNegative(context, measurementDoc, rowBinding, ErrorsHandler);
         isValid &= validateReverseCounterWithoutOverflowIsNotPositive(context, measurementDoc, rowBinding, ErrorsHandler);
-        isValid &= validateReadingGreaterThanOrEqualLowerRange(context, measurementDoc, rowBinding, ErrorsHandler);
-        isValid &= validateReadingLessThanOrEqualUpperRange(context, measurementDoc, rowBinding, ErrorsHandler);
         isValid &= validateReverseCounterRollover(context, measurementDoc, rowBinding, ErrorsHandler);
         isValid &= validateCounterReadingEqualToPreviousReading(context, measurementDoc, rowBinding, ErrorsHandler);
         isValid &= validateCounterRolloverWithOverflow(context, measurementDoc, rowBinding, ErrorsHandler);
     }
 
     return isValid;
+}
+
+function shouldSkipEmptyReading(context, valuesForRow) {
+    if (ValidationLibrary.evalIsEmpty(valuesForRow.ValuationCode) && ValidationLibrary.evalIsEmpty(valuesForRow.ReadingValue)) {
+        let missingCount = CommonLibrary.getStateVariable(context, 'MissingCount');
+        CommonLibrary.setStateVariable(context, 'MissingCount', missingCount + 1); //Increment missing counter
+        return true;
+    }
+    
+    return false;
 }
 
 // New reading must be <= length limit defined in global
@@ -267,38 +321,6 @@ function validateReverseCounterWithoutOverflowIsNotPositive(context, measurement
 
         if (!isValid) {
             let message = context.localizeText('validation_reverse_counter_reading_must_be_less_than_or_equal_toZero');
-            ErrorsHandler.addErrorMessage(ErrorsHandler.generateKey('ReadingValue'), message);
-        }
-    }
-
-    return isValid;
-}
-
-// If lower range exists, new reading must be >= lower range
-function validateReadingGreaterThanOrEqualLowerRange(context, measurementDoc, measurementPoint, ErrorsHandler) {
-    let isValid = true;
-
-    if (measurementPoint.IsLowerRange === 'X' && measurementPoint.LowerRange) {
-        isValid = measurementDoc.ReadingValue >= measurementPoint.LowerRange;
-
-        if (!isValid) {
-            let message = context.localizeText('validation_reading_below_lower_range_of', [measurementPoint.LowerRange]);
-            ErrorsHandler.addErrorMessage(ErrorsHandler.generateKey('ReadingValue'), message);
-        }
-    }
-
-    return isValid;
-}
-
-// If upper range exists, new reading must be <= upper range
-function validateReadingLessThanOrEqualUpperRange(context, measurementDoc, measurementPoint, ErrorsHandler) {
-    let isValid = true;
-
-    if (measurementPoint.IsUpperRange === 'X' && measurementPoint.UpperRange) {
-        isValid = measurementDoc.ReadingValue <= measurementPoint.UpperRange;
-
-        if (!isValid) {
-            let message = context.localizeText('validation_reading_exceeds_upper_range_of', [measurementPoint.UpperRange]);
             ErrorsHandler.addErrorMessage(ErrorsHandler.generateKey('ReadingValue'), message);
         }
     }
