@@ -1092,8 +1092,7 @@ export default class {
     static validateReadingGreaterThanOrEqualLowerRange(pageClientAPI, dict) {
 
         //Reading is not allowed, or reading is optional and empty
-        const isReadingFromTable = typeof dict.ReadingSim === 'number';
-        if ( !isReadingFromTable && libThis.evalIgnoreReading(dict)) {
+        if (libThis.evalIgnoreReading(dict)) {
             return Promise.resolve(true);
         }
 
@@ -1121,8 +1120,7 @@ export default class {
     static validateReadingLessThanOrEqualUpperRange(pageClientAPI, dict) {
 
         //Reading is not allowed, or reading is optional and empty
-        const isReadingFromTable = typeof dict.ReadingSim === 'number';
-        if ( !isReadingFromTable && libThis.evalIgnoreReading(dict)) {
+        if (libThis.evalIgnoreReading(dict)) {
             return Promise.resolve(true);
         }
 
@@ -1298,16 +1296,14 @@ export default class {
      * Evaluates whether the current reading >= lower range
      */
     static evalReadingGreaterThanEqualToLowerRange(context, dict) {
-        const isReadingFromTable = typeof dict.ReadingSim === 'number';
-        return (libLocal.toNumber(context, isReadingFromTable ? dict.ReadingSim : dict.ReadingSim.getValue()) >= libLocal.toNumber(context, dict.LowerRange));
+        return (libLocal.toNumber(context, dict.ReadingSim.getValue()) >= libLocal.toNumber(context, dict.LowerRange));
     }
 
     /**
     * Evaluates whether the current reading <= upper range
     */
     static evalReadingLessThanEqualToUpperRange(context, dict) {
-        const isReadingFromTable = typeof dict.ReadingSim === 'number';
-        return (libLocal.toNumber(context, isReadingFromTable ? dict.ReadingSim : dict.ReadingSim.getValue()) <= libLocal.toNumber(context, dict.UpperRange));
+        return (libLocal.toNumber(context, dict.ReadingSim.getValue()) <= libLocal.toNumber(context, dict.UpperRange));
     }
 
     /**

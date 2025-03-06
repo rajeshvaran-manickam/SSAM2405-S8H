@@ -15,43 +15,10 @@ export default function MeasuringPointsEDTOnSave(context) {
 
     if (ErrorsHandler.hasErrors()) {
         ErrorsHandler.showErrors(sections);
-        return validateOptionalFields(context).then(() => Promise.reject());
+        return Promise.reject();
     } else {
-        return validateOptionalFields(context).then(() => MeasuringPointsEDTOnCommit(context));
+        return MeasuringPointsEDTOnCommit(context);
     }
-}
-
-function validateOptionalFields (context){
-    let warningResult = [];
-    let sections = context.getPageProxy().getControls()[0].getSections();
-    let edtSectionIndex = 0;
- 
-    for (let section of sections) {
-        if (section._context.element.definition._data.Class === 'EditableDataTableViewExtension') {
-            let sectionExtension = section.getExtension();
-            if (!sectionExtension) {
-                continue;
-            }
-            sectionExtension.getRowBindings().forEach((rowBinding) => {
-                let cachedRowBinding = EDTHelper.getCachedRowBinding(context, edtSectionIndex, rowBinding);
-                let measurementDoc = EDTHelper.getLatestMeasurementDoc(context, cachedRowBinding);
-
-                const dict = {
-                    IsUpperRange: rowBinding.IsUpperRange,
-                    IsLowerRange: rowBinding.IsLowerRange,
-                    ReadingSim: measurementDoc.ReadingValue, 
-                    UpperRange: rowBinding.UpperRange,
-                    LowerRange: rowBinding.LowerRange, 
-                    Point: rowBinding.Point
-                };
-            
-                warningResult.push(MeasuringPointLibrary.validateReadingGreaterThanOrEqualLowerRange(context, dict));
-                warningResult.push(MeasuringPointLibrary.validateReadingLessThanOrEqualUpperRange(context, dict));
-            });
-            edtSectionIndex++;
-        }
-    }
-    return Promise.all(warningResult);
 }
 
 function validateEDTSections(context, ErrorsHandler) {
@@ -113,6 +80,8 @@ export function validateReadingValue(context, measurementDoc, rowBinding, Errors
         isValid &= validateContinuousCounter(context, measurementDoc, rowBinding, ErrorsHandler);
         isValid &= validateOverflowCounterIsNotNegative(context, measurementDoc, rowBinding, ErrorsHandler);
         isValid &= validateReverseCounterWithoutOverflowIsNotPositive(context, measurementDoc, rowBinding, ErrorsHandler);
+        isValid &= validateReadingGreaterThanOrEqualLowerRange(context, measurementDoc, rowBinding, ErrorsHandler);
+        isValid &= validateReadingLessThanOrEqualUpperRange(context, measurementDoc, rowBinding, ErrorsHandler);
         isValid &= validateReverseCounterRollover(context, measurementDoc, rowBinding, ErrorsHandler);
         isValid &= validateCounterReadingEqualToPreviousReading(context, measurementDoc, rowBinding, ErrorsHandler);
         isValid &= validateCounterRolloverWithOverflow(context, measurementDoc, rowBinding, ErrorsHandler);
@@ -322,7 +291,20 @@ function validateReadingGreaterThanOrEqualLowerRange(context, measurementDoc, me
 }
 
 // If upper range exists, new reading must be <= upper range
+function validateReadingLessThanOrEqualUpperRange(context, measurementDoc, measurementPoint, ErrorsHandler) {
+    let isValid = true;
 
+    if (measurementPoint.IsUpperRange === 'X' && measurementPoint.UpperRange) {
+        isValid = measurementDoc.ReadingValue <= measurementPoint.UpperRange;
+
+        if (!isValid) {
+            let message = context.localizeText('validation_reading_exceeds_upper_range_of', [measurementPoint.UpperRange]);
+            ErrorsHandler.addErrorMessage(ErrorsHandler.generateKey('ReadingValue'), message);
+        }
+    }
+
+    return isValid;
+}
 
 // If this is a reverse counter point with overflow, the new reading must be >= 0 if no previous reading, or <= previous reading if one exists
 function validateReverseCounterRollover(context, measurementDoc, measurementPoint, ErrorsHandler) {
